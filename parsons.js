@@ -1241,7 +1241,7 @@
    };
 
     ParsonsWidget.prototype.getLineByOrig = function(orig) {
-      var line;
+      var line = null;
       for (var i = 0; i < this.modified_lines.length; i++) {
         var current_line = this.modified_lines[i];
         if (current_line.orig === orig) {
@@ -1267,7 +1267,8 @@
      var ids = [];
      for (var i = 0; i < h.length; i++) {
        lineValues = h[i].split("_");
-       ids.push(this.getLineByOrig(parseInt(lineValues[0], 10)).id);
+       var line = this.getLineByOrig(parseInt(lineValues[0], 10));
+       line && ids.push(line.id);
      }
      return ids;
    };
@@ -1286,8 +1287,10 @@
      for (var i = 0; i < h.length; i++) {
          lineValues = h[i].split("_");
          var line = this.getLineByOrig(parseInt(lineValues[0], 10));
-         line.indent = Number(lineValues[1]);
-         this.updateHTMLIndent(line.id);
+         if (line) {
+           line.indent = parseInt(lineValues[1], 10);
+           this.updateHTMLIndent(line.id);
+         }
      }
      return ids;
    };
