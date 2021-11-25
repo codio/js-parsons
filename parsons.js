@@ -465,6 +465,7 @@
     //    close = {"^s*ELSE\s*$": "IF", "^\s*ENDIF\s*$": "IF"};
     var open = this.parson.options.block_open,
         close = this.parson.options.block_close,
+        show_feedback = this.parson.options.show_feedback === false ? false : true,
         blockErrors = [],
         i;
     var progLang = this.parson.options.programmingLang;
@@ -489,7 +490,7 @@
         // -1 will mean no matching indent was found
         if (item.indent < 0) {
           blockErrors.push(this.parson.translations.no_matching(i + 1));
-          !options.skipHighlight && $("#" + item.id).addClass("incorrectIndent");
+          !(options.skipHighlight || !show_feedback) && $("#" + item.id).addClass("incorrectIndent");
           break; // break on error
         }
 
@@ -502,13 +503,13 @@
             topBlock = blocks.pop();
             if (!topBlock) {
               blockErrors.push(this.parson.translations.no_matching_open(i + 1, close[blockClose]));
-              !options.skipHighlight && $("#" + item.id).addClass("incorrectPosition");
+              !(options.skipHighlight || !show_feedback) && $("#" + item.id).addClass("incorrectPosition");
             } else if (close[blockClose] !== topBlock.name) { // incorrect closing block
               blockErrors.push(this.parson.translations.block_close_mismatch(i + 1, close[blockClose], topBlock.line, topBlock.name));
-              !options.skipHighlight && $("#" + item.id).addClass("incorrectPosition");
+              !(options.skipHighlight || !show_feedback) && $("#" + item.id).addClass("incorrectPosition");
             } else if (student_code[i].indent !== topBlock.indent) { // incorrect indent
               blockErrors.push(this.parson.translations.no_matching(i + 1));
-              !options.skipHighlight && $("#" + item.id).addClass("incorrectIndent");
+              !(options.skipHighlight || !show_feedback) && $("#" + item.id).addClass("incorrectIndent");
             }
             prevIndent = topBlock?topBlock.indent:0;
             minIndent = 0;
@@ -533,7 +534,7 @@
           if ((prevIndent && student_code[i].indent !== prevIndent) ||
               student_code[i].indent <= minIndent) {
             blockErrors.push(this.parson.translations.no_matching(i + 1));
-            !options.skipHighlight && $("#" + item.id).addClass("incorrectIndent");
+            !(options.skipHighlight || !show_feedback) && $("#" + item.id).addClass("incorrectIndent");
           }
           prevIndent = student_code[i].indent;
         }
@@ -546,7 +547,7 @@
       // create errors for all blocks opened but not closed
       for (i = 0; i < blocks.length; i++) {
         blockErrors.push(this.parson.translations.no_matching_close(blocks[i].line, blocks[i].name));
-        !options.skipHighlight &&  $("#" + blocks[i].item.id).addClass("incorrectPosition");
+        !(options.skipHighlight || !show_feedback) &&  $("#" + blocks[i].item.id).addClass("incorrectPosition");
       }
     }
     // if there were errors in the blocks, give feedback and don't execute the code
@@ -623,6 +624,7 @@
   LineBasedGrader.prototype.grade = function(options, elementId) {
     options = options || {};
     var parson = this.parson;
+    var show_feedback = this.parson.options.show_feedback === false ? false : true;
     var elemId = elementId || parson.options.sortableId;
     var student_code = parson.normalizeIndents(parson.getModifiedCode("#ul-" + elemId));
     var lines_to_check = Math.min(student_code.length, parson.model_solution.length);
@@ -664,7 +666,7 @@
 	    	// it must be a distractor
 	    	// => add to feedback, log, and ignore in LIS computation
 	        wrong_order = true;
-          !options.skipHighlight && lineObject.markIncorrectPosition();
+          !(options.skipHighlight || !show_feedback) && lineObject.markIncorrectPosition();
 	    	incorrectLines.push(lineObject.orig);
 	        lineObject.lisIgnore = true;
 	      } else {
@@ -693,7 +695,7 @@
     			 				    .map(function (lineObject) { return lineObject.position; }));
     $.each(inv, function(_index, lineObjectIndex) {
     	// Highlight the lines that could be moved to fix code as defined by the LIS computation
-        !options.skipHighlight && lisStudentCodeLineObjects[lineObjectIndex].markIncorrectPosition();
+      !(options.skipHighlight || !show_feedback) && lisStudentCodeLineObjects[lineObjectIndex].markIncorrectPosition();
         incorrectLines.push(lisStudentCodeLineObjects[lineObjectIndex].orig);
       });
     if (inv.length > 0 || incorrectLines.length > 0) {
@@ -707,11 +709,11 @@
 
     // Check the number of lines in student's code
     if (parson.model_solution.length < student_code.length) {
-      !options.skipHighlight && $("#ul-" + elemId).addClass("incorrect");
+      !(options.skipHighlight || !show_feedback) && $("#ul-" + elemId).addClass("incorrect");
       errors.push(parson.translations.lines_too_many());
       log_errors.push({type: "tooManyLines", lines: student_code.length});
     } else if (parson.model_solution.length > student_code.length){
-      !options.skipHighlight && $("#ul-" + elemId).addClass("incorrect");
+      !(options.skipHighlight || !show_feedback) && $("#ul-" + elemId).addClass("incorrect");
       errors.push(parson.translations.lines_missing());
       log_errors.push({type: "tooFewLines", lines: student_code.length});
     }
@@ -723,14 +725,14 @@
         var model_line = parson.model_solution[i];
         if (code_line.indent !== model_line.indent &&
              ((!parson.options.first_error_only) || errors.length === 0)) {
-          !options.skipHighlight && code_line.markIncorrectIndent();
+              !(options.skipHighlight || !show_feedback) && code_line.markIncorrectIndent();
           errors.push(parson.translations.block_structure(i+1));
           log_errors.push({type: "incorrectIndent", line: (i+1)});
         }
         if (code_line.code == model_line.code &&
              code_line.indent == model_line.indent &&
              errors.length === 0) {
-          !options.skipHighlight && code_line.markCorrect();
+              !(options.skipHighlight || !show_feedback) && code_line.markCorrect();
         }
       }
     }
@@ -1320,6 +1322,11 @@
    ParsonsWidget.prototype.getFeedback = function() {
      this.feedback_exists = true;
      var fb = this.grader.grade();
+     var show_feedback = this.options.show_feedback === false ? false : true;
+    if (!show_feedback) {
+      return {success: fb.success};
+     }
+
      if (this.options.feedback_cb) {
        this.options.feedback_cb(fb); //TODO(petri): what is needed?
      }
