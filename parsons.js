@@ -1321,7 +1321,8 @@
      options = options || {};
      this.feedback_exists = true;
      var fb = this.grader.grade(options);
-     if (!options.showFeedback) {
+     var showFeedback = options.showFeedback === false ? false : true
+     if (!showFeedback) {
        return {success: fb.success};
      }
 
