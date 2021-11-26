@@ -1317,9 +1317,14 @@
     * @return
     * TODO(petri): Separate UI from here
     */
-   ParsonsWidget.prototype.getFeedback = function() {
+   ParsonsWidget.prototype.getFeedback = function(options) {
+     options = options || {};
      this.feedback_exists = true;
-     var fb = this.grader.grade();
+     var fb = this.grader.grade(options);
+     if (!options.showFeedback) {
+       return {success: fb.success};
+     }
+
      if (this.options.feedback_cb) {
        this.options.feedback_cb(fb); //TODO(petri): what is needed?
      }
