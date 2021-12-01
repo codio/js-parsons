@@ -1208,7 +1208,7 @@
        if (i === 0) {
          new_line.indent = 0;
          if (lines[i].indent !== 0) {
-           new_line.indent = -1;
+           new_line.indent = 1;
          }
        } else if (lines[i].indent == lines[i-1].indent) {
          new_line.indent = normalized[i-1].indent;
