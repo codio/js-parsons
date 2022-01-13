@@ -1190,35 +1190,32 @@
    // i.e. code is malformed, value of indent may be -1.
    // For example, the first line may not be indented.
    ParsonsWidget.prototype.normalizeIndents = function(lines) {
-
      var normalized = [];
      var new_line;
-     var match_indent = function(index) {
-       //return line index from the previous lines with matching indentation
-       for (var i = index-1; i >= 0; i--) {
-         if (lines[i].indent == lines[index].indent) {
-           return normalized[i].indent;
-         }
-       }
-       return -1;
-     };
+     var minIndent = 0;
      for ( var i = 0; i < lines.length; i++ ) {
        //create shallow copy from the line object
        new_line = jQuery.extend({}, lines[i]);
        if (i === 0) {
          new_line.indent = 0;
-         if (lines[i].indent !== 0) {
-           new_line.indent = -1;
-         }
        } else if (lines[i].indent == lines[i-1].indent) {
          new_line.indent = normalized[i-1].indent;
        } else if (lines[i].indent > lines[i-1].indent) {
          new_line.indent = normalized[i-1].indent + 1;
        } else {
-         // indentation can be -1 if no matching indentation exists, i.e. IndentationError in Python
-         new_line.indent = match_indent(i);
+         new_line.indent = normalized[i-1].indent - 1;
+         if (new_line.indent < minIndent) {
+           minIndent = new_line.indent
+         }
        }
        normalized[i] = new_line;
+     }
+
+     if (minIndent < 0) {
+       var offset = -1 * minIndent
+       for ( var i = 0; i < normalized.length; i++ ) {
+         normalized[i].indent = normalized[i].indent + offset
+       }
      }
      return normalized;
    };
