@@ -594,6 +594,9 @@
       // with $$toggle$$ and there to be as many toggles in executable code than in the
       // code shown to learner.
       var execline = executableCode[ind];
+      if (!execline) {
+        return true;
+      }
       var toggles = execline.match(toggleRegexp);
       if (toggles) {
         for (var i = 0; i < toggles.length; i++) {
