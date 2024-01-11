@@ -4,7 +4,7 @@ set -xe
 s3Key=$1
 s3Secret=$2
 tag=$3
-folder="guides\/parsons\/"
+folder="guides\/parsons"
 cdn="\/\/static-assets.codio.com\/${folder}\/${tag}"
 
 readarray -d '' files < <(find ./lib -type f -print0)
