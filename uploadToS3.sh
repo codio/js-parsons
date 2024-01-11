@@ -1,11 +1,21 @@
 #!/bin/bash
 set -xe
 
+joinByChar() {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
 s3Key=$1
 s3Secret=$2
 tag=$3
-folder="guides\/parsons"
+folderArr=("guides" "parsons")
+folder=$(joinByChar "/", "${folderArr[@]}")
+folderEscaped=$(joinByChar "\/", "${folderArr[@]}")
 cdn="\/\/static-assets.codio.com\/${folder}\/${tag}"
+
+echo "$cdn"
 
 readarray -d '' files < <(find ./lib -type f -print0)
 
