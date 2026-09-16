@@ -917,10 +917,18 @@
      this.options = jQuery.extend({}, defaults, options);
      this.feedback_exists = false;
      this.id_prefix = options['sortableId'] + 'codeline';
-     if (translations.hasOwnProperty(this.options.lang)) {
-       this.translations = translations[this.options.lang];
+     let allTranslations = translations
+     if (this.options.hasOwnProperty('translations')) {
+       for (let key in this.options.translations) {
+          if (allTranslations.hasOwnProperty(key)) {
+            allTranslations[key] = {...allTranslations[key], ...this.options.translations[key]};
+          }
+       }
+     }
+     if (allTranslations.hasOwnProperty(this.options.lang)) {
+       this.translations = allTranslations[this.options.lang];
      } else {
-       this.translations = translations['en'];
+       this.translations = allTranslations['en'];
      }
 
      // translate trash_label and solution_label
