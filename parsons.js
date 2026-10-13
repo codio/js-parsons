@@ -1403,6 +1403,9 @@
        for(var i in permutation) {
            idlist.push(this.modified_lines[permutation[i]].id);
        }
+       for (var j = 0; j < this.modified_lines.length; j++) {
+           this.modified_lines[j].indent = 0;
+       }
        if (this.options.trashId) {
            this.createHTMLFromLists([],idlist);
        } else {
