@@ -47,9 +47,21 @@ test("normalizeIndents()", function() {
 	 jQuery.map([0, 1, 2, -1], codeLine),
 	 "no matching indentation");
        deepEqual(
-	 parson.normalizeIndents(jQuery.map([1, 1], codeLine))[0],	
-	 codeLine(-1,0),
-	 "first item should not be indented");			
+	 parson.normalizeIndents(jQuery.map([1, 1], codeLine)),
+	 jQuery.map([0, 0], codeLine),
+	 "indented first item");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([3, 0], codeLine)),
+	 jQuery.map([1, 0], codeLine),
+	 "descending indentation");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([1, 1, 0, 1], codeLine)),
+	 jQuery.map([1, 1, 0, 1], codeLine),
+	 "indented first items");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([0, 1, 2, 0], codeLine)),
+	 jQuery.map([0, 1, 2, 0], codeLine),
+	 "dedent to the matching line, not by one level");
      });	
 
 module("Initialization of the widget");

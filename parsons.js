@@ -1199,11 +1199,28 @@
    // Returns a new array of line objects whose indent fields' values
    // may be different from the argument. If indentation does not match,
    // i.e. code is malformed, value of indent may be -1.
-   // For example, the first line may not be indented.
+   // The first line may be indented, then the levels are shifted
+   // so that the least indented line gets level 0.
    ParsonsWidget.prototype.normalizeIndents = function(lines) {
      var normalized = [];
      var new_line;
      var minIndent = 0;
+     var matchIndent = function(index) {
+       for (var i = index-1; i >= 0; i--) {
+         if (lines[i].indent == lines[index].indent) {
+           return normalized[i].indent;
+         }
+       }
+       return undefined;
+     };
+     var isLessThanPrevious = function(index) {
+       for (var i = index-1; i >= 0; i--) {
+         if (lines[i].indent <= lines[index].indent) {
+           return false;
+         }
+       }
+       return true;
+     };
      for ( var i = 0; i < lines.length; i++ ) {
        //create shallow copy from the line object
        new_line = jQuery.extend({}, lines[i]);
@@ -1212,21 +1229,21 @@
        } else if (lines[i].indent == lines[i-1].indent) {
          new_line.indent = normalized[i-1].indent;
        } else if (lines[i].indent > lines[i-1].indent) {
-         new_line.indent = normalized[i-1].indent + 1;
+         new_line.indent = normalized[i-1].indent === null ? null : normalized[i-1].indent + 1;
        } else {
-         new_line.indent = normalized[i-1].indent - 1;
-         if (new_line.indent < minIndent) {
-           minIndent = new_line.indent
+         new_line.indent = matchIndent(i);
+         if (new_line.indent === undefined) {
+           new_line.indent = isLessThanPrevious(i) ? minIndent - 1 : null;
          }
+       }
+       if (new_line.indent !== null && new_line.indent < minIndent) {
+         minIndent = new_line.indent;
        }
        normalized[i] = new_line;
      }
 
-     if (minIndent < 0) {
-       var offset = -1 * minIndent
-       for ( var i = 0; i < normalized.length; i++ ) {
-         normalized[i].indent = normalized[i].indent + offset
-       }
+     for ( var j = 0; j < normalized.length; j++ ) {
+       normalized[j].indent = normalized[j].indent === null ? -1 : normalized[j].indent - minIndent;
      }
      return normalized;
    };
