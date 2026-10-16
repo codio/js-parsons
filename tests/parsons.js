@@ -47,9 +47,21 @@ test("normalizeIndents()", function() {
 	 jQuery.map([0, 1, 2, -1], codeLine),
 	 "no matching indentation");
        deepEqual(
-	 parson.normalizeIndents(jQuery.map([1, 1], codeLine))[0],	
-	 codeLine(-1,0),
-	 "first item should not be indented");			
+	 parson.normalizeIndents(jQuery.map([1, 1], codeLine)),
+	 jQuery.map([0, 0], codeLine),
+	 "indented first item");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([3, 0], codeLine)),
+	 jQuery.map([1, 0], codeLine),
+	 "descending indentation");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([1, 1, 0, 1], codeLine)),
+	 jQuery.map([1, 1, 0, 1], codeLine),
+	 "indented first items");
+       deepEqual(
+	 parson.normalizeIndents(jQuery.map([0, 1, 2, 0], codeLine)),
+	 jQuery.map([0, 1, 2, 0], codeLine),
+	 "dedent to the matching line, not by one level");
      });	
 
 module("Initialization of the widget");
@@ -111,6 +123,29 @@ test("items in the sortable list (distractors)", function() {
        $("#main ul li").each(function() { optionTexts.push($(this).text()) });
        
        deepEqual(optionTexts.sort(), ['def hello(name):', 'print name', 'xxx'], 'li elements should contain the codelines');
+     });
+
+test("shuffleLines() resets indentation", function() {
+       window.PR = window.PR || {prettyPrint: function() {}};
+       var initial =
+		 'def find_sum(n):\n' +
+		 '    if n == 0:\n' +
+		 '        return 0\n' +
+		 '    return n + find_sum(n - 1)\n';
+       var parson = new ParsonsWidget({'sortableId': 'main',
+				       'permutation': function(n) { return [0, 1, 2, 3]; }});
+       parson.init(initial);
+       parson.shuffleLines();
+       parson.updateIndentsFromHash('0_0-1_1-2_2-3_1');
+       ok(parson.getFeedback().success, 'solved before reset');
+
+       parson.shuffleLines();
+       deepEqual(
+	 jQuery.map(parson.modified_lines, function(line) { return line.indent; }),
+	 [0, 0, 0, 0],
+	 'indentation of every line is reset');
+       $("#main li").each(function() { equal(this.style.marginLeft, '', 'no indentation in html'); });
+       ok(!parson.getFeedback().success, 'not solved after reset');
      });
 
                                          
